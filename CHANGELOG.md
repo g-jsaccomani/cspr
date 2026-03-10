@@ -14,3 +14,6 @@ All notable changes and security updates recorded below.
 ### [2026-02-10] feat(scripts): add CLI assessment and batch execution utility scripts
 - Completed milestone deliverables and technical verification.
 
+### [2026-03-10] docs(architecture): document CSPR scoring methodology and remediation workflows
+- Completed milestone deliverables and technical verification.
+
