@@ -17,3 +17,6 @@ All notable changes and security updates recorded below.
 ### [2026-03-10] docs(architecture): document CSPR scoring methodology and remediation workflows
 - Completed milestone deliverables and technical verification.
 
+### [2026-05-05] ci(workflows): configure automated SAST security scanning and GitHub issue templates
+- Completed milestone deliverables and technical verification.
+
