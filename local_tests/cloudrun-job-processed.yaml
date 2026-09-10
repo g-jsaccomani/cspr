@@ -1,0 +1,38 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: cspr-prereq-job
+  labels:
+    cloud.googleapis.com/location: us-east1
+spec:
+  template:
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: cspr-prereq-cloudrun-sa@customer-cspr-poc.iam.gserviceaccount.com
+          containers:
+          - image: us-east1-docker.pkg.dev/customer-cspr-poc/customer-cspr-toolkit/cspr-prereq:latest
+            env:
+            - name: BQ_PROJECT_ID
+              value: "customer-cspr-poc"
+            - name: ORGANIZATION_ID
+              value: "123456789012"
+            - name: LOCATION
+              value: "us-east1"
+            - name: GCP_GROUP_EMAIL_ADDRESS
+              value: "cloud-sec-lead@example.com"
+            - name: ENABLE_CAI
+              value: "TRUE"
+            - name: ENABLE_ORGPOLICY
+              value: "TRUE"
+            - name: ENABLE_RECOMMENDER_EXPORT
+              value: "TRUE"
+            - name: ENABLE_SAKEY_ANALYZER
+              value: "TRUE"
+            resources:
+              limits:
+                cpu: "2000m"
+                memory: "4Gi"
+          timeoutSeconds: 3600
+          maxRetries: 1

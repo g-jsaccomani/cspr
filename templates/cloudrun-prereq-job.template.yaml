@@ -1,0 +1,52 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: cspr-prereq-job
+  labels:
+    cloud.googleapis.com/location: ${LOCATION}
+spec:
+  template:
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: cspr-prereq-cloudrun-sa@${BQ_PROJECT_ID}.iam.gserviceaccount.com
+          containers:
+          - image: ${LOCATION}-docker.pkg.dev/${BQ_PROJECT_ID}/customer-cspr-toolkit/cspr-prereq:latest
+            env:
+            - name: BQ_PROJECT
+              value: "${BQ_PROJECT_ID}"
+            - name: BQ_PROJECT_ID
+              value: "${BQ_PROJECT_ID}"
+            - name: ORGANIZATION_ID
+              value: "${ORGANIZATION_ID}"
+            - name: LOCATION
+              value: "${LOCATION}"
+            - name: GCP_GROUP_EMAIL_ADDRESS
+              value: "${GCP_GROUP_EMAIL_ADDRESS}"
+            - name: BQDATASET_INVENTORY
+              value: "cspr_cai"
+            - name: BQDATASET_FINDING
+              value: "cspr_finding"
+            - name: BQDATASET_POLICYANALYZER
+              value: "cspr_policy"
+            - name: BQDATASET_REC
+              value: "cspr_rec"
+            - name: BQDATASET_CLOUDIDENTITY
+              value: "cspr_ci"
+            - name: ENABLE_CAI
+              value: "TRUE"
+            - name: ENABLE_ORGPOLICY
+              value: "TRUE"
+            - name: ENABLE_RECOMMENDER_EXPORT
+              value: "TRUE"
+            - name: ENABLE_SAKEY_ANALYZER
+              value: "TRUE"
+            - name: ENABLE_CLOUD_IDENTITY
+              value: "FALSE"
+            resources:
+              limits:
+                cpu: "2000m"
+                memory: "4Gi"
+          timeoutSeconds: 3600
+          maxRetries: 1

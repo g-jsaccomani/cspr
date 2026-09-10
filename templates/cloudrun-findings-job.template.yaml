@@ -1,0 +1,36 @@
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: cspr-findings-job
+  labels:
+    cloud.googleapis.com/location: ${LOCATION}
+spec:
+  template:
+    spec:
+      taskCount: 1
+      template:
+        spec:
+          serviceAccountName: cspr-prereq-cloudrun-sa@${BQ_PROJECT_ID}.iam.gserviceaccount.com
+          containers:
+          - image: ${LOCATION}-docker.pkg.dev/${BQ_PROJECT_ID}/customer-cspr-toolkit/cspr-toolkit-findings:latest
+            env:
+            - name: BQ_PROJECT
+              value: "${BQ_PROJECT_ID}"
+            - name: BQ_PROJECT_ID
+              value: "${BQ_PROJECT_ID}"
+            - name: LOCATION
+              value: "${LOCATION}"
+            - name: BQDATASET_INVENTORY
+              value: "cspr_cai"
+            - name: BQDATASET_POLICYANALYZER
+              value: "cspr_policy"
+            - name: BQDATASET_REC
+              value: "cspr_rec"
+            - name: BQDATASET_FINDING
+              value: "cspr_finding"
+            resources:
+              limits:
+                cpu: "2000m"
+                memory: "4Gi"
+          timeoutSeconds: 3600
+          maxRetries: 1

@@ -1,0 +1,55 @@
+========================================================================================
+📋 CSPR ENVIRONMENT REPORT - CONNECTION DETAILS (GOOGLE CLOUD PSO)
+========================================================================================
+Execution Date:  2026-09-09 16:27:09 UTC
+Executed By:     cloud-sec-lead@example.com
+Security Lead:   Joabson Saccomani (jsaccomani@google.com)
+
+----------------------------------------------------------------------------------------
+1. PROVISIONED ENVIRONMENT DETAILS:
+----------------------------------------------------------------------------------------
+ • GCP Project ID:         customer-cspr-poc
+ • GCP Project Number:     123456789012
+ • Organization ID:        123456789012
+ • Parent Folder:          google-cspr-audit (folders/1234567890)
+ • Billing Account ID:     010101-ABCDEF-010101
+ • Primary Region:         us-east1
+ • Service Account:        cspr-prereq-cloudrun-sa@customer-cspr-poc.iam.gserviceaccount.com
+ • Artifact Registry:      us-east1-docker.pkg.dev/customer-cspr-poc/customer-cspr-toolkit
+ • Cloud Run Job:          cspr-prereq-job
+ • Security Reviewer:      cloud-sec-lead@example.com ([✔] Granted)
+
+----------------------------------------------------------------------------------------
+2. GOOGLE CLOUD PSO CONNECTION & EXECUTION COMMANDS:
+----------------------------------------------------------------------------------------
+# Step A: Set target project:
+gcloud config set project customer-cspr-poc
+
+# Step B: Push CSPR scanner image to customer's Artifact Registry:
+gcloud auth configure-docker us-east1-docker.pkg.dev --quiet
+docker pull us-docker.pkg.dev/cloud-pso-security/cspr-toolkit/cspr-toolkit-prerequisites:v3.0.8
+docker tag us-docker.pkg.dev/cloud-pso-security/cspr-toolkit/cspr-toolkit-prerequisites:v3.0.8 us-east1-docker.pkg.dev/customer-cspr-poc/customer-cspr-toolkit/cspr-prereq:latest
+docker push us-east1-docker.pkg.dev/customer-cspr-poc/customer-cspr-toolkit/cspr-prereq:latest
+
+# Step C: Deploy and execute Cloud Run Job:
+gcloud run jobs replace cloudrun-job-processed.yaml --project=customer-cspr-poc --region=us-east1
+gcloud run jobs execute cspr-prereq-job --region=us-east1 --project=customer-cspr-poc
+
+# Step D: Verify BigQuery datasets creation:
+bq ls --project_id=customer-cspr-poc
+
+----------------------------------------------------------------------------------------
+3. PREREQUISITES VALIDATION CHECKLIST:
+----------------------------------------------------------------------------------------
+ [✔] Organization Folder verified/created (google-cspr-audit: folders/1234567890)
+ [✔] GCP Project provisioned and billing account linked (010101-ABCDEF-010101)
+ [✔] 7 mandatory APIs enabled (Cloud Asset, BigQuery, Run, Artifact Registry, etc.)
+ [✔] Artifact Registry repository created (customer-cspr-toolkit)
+ [✔] Service Account created with Project and Organization level viewer roles
+ [✔] Cloud Run Job definition deployed with proper variable substitution
+ [✔] Granted Reviewer permissions (cloud-sec-lead@example.com)
+
+⚠️  TELEMETRY INGESTION WINDOW:
+ Recommender and Policy Analyzer data require 48 to 72 hours for complete
+ backend ingestion into BigQuery after the Job execution.
+========================================================================================
