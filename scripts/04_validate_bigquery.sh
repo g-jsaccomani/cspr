@@ -38,7 +38,18 @@ fi
 
 echo ""
 echo -e "Querying BigQuery datasets in project: ${BOLD}${BQ_PROJECT_ID}${NC}..."
-DATASETS=$(bq ls --project_id="${BQ_PROJECT_ID}" --format=prettyjson 2>/dev/null || echo "[]")
+BQ_ERR=$(mktemp)
+if ! DATASETS=$(bq ls --project_id="${BQ_PROJECT_ID}" --format=prettyjson 2>"${BQ_ERR}"); then
+    echo ""
+    echo -e "${RED}[✘] Failed to query BigQuery in project '${BQ_PROJECT_ID}'.${NC}"
+    echo -e "${YELLOW}Details:${NC}"
+    cat "${BQ_ERR}"
+    rm -f "${BQ_ERR}"
+    echo ""
+    echo -e "${CYAN}Tip:${NC} Make sure you are authenticated with the Nubank account (${BOLD}gcloud auth login${NC}) or run inside Cloud Shell."
+    exit 1
+fi
+rm -f "${BQ_ERR}"
 
 check_dataset() {
     local DATASET_NAME="$1"
@@ -46,7 +57,7 @@ check_dataset() {
     local IS_ASYNC="$3"
     
     echo -n " • Checking dataset '${DATASET_NAME}' (${DESCRIPTION})... "
-    if echo "${DATASETS}" | grep -q ""datasetId": "${DATASET_NAME}""; then
+    if echo "${DATASETS}" | grep -q "\"${DATASET_NAME}\""; then
         TABLES_COUNT=$(bq ls --project_id="${BQ_PROJECT_ID}" "${DATASET_NAME}" 2>/dev/null | grep -c -E "TABLE|VIEW" || true)
         echo -e "${GREEN}[✔] Present (${TABLES_COUNT} tables/views)${NC}"
     else
@@ -83,11 +94,10 @@ check_table_rows() {
     fi
 }
 
-check_table_rows "cspr_cai" "resource_cache"
-check_table_rows "cspr_cai" "iam_policy_cache"
-check_table_rows "cspr_policy" "orgpolicy_cache"
-check_table_rows "cspr_policy" "service_account_keys"
-check_table_rows "cspr_rec" "recommendations_record"
+check_table_rows "cspr_cai" "iam_policy"
+check_table_rows "cspr_cai" "org_policy"
+check_table_rows "cspr_policy" "policyanalyzer_orgpolicy_analysis"
+check_table_rows "cspr_policy" "policyanalyzer_UnusedServiceAccountKey"
 
 echo ""
 echo -e "${CYAN}${BOLD}==============================================================================${NC}"
