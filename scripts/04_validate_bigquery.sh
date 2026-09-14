@@ -96,8 +96,21 @@ check_table_rows() {
 
 check_table_rows "cspr_cai" "iam_policy"
 check_table_rows "cspr_cai" "org_policy"
+check_table_rows "cspr_cai" "resource"
+check_table_rows "cspr_cai" "access_context_manager_policy"
+check_table_rows "cspr_cai" "os_inventory"
 check_table_rows "cspr_policy" "policyanalyzer_orgpolicy_analysis"
 check_table_rows "cspr_policy" "policyanalyzer_UnusedServiceAccountKey"
+check_table_rows "cspr_rec" "recommendations_export"
+check_table_rows "cspr_rec" "insights_export"
+
+echo ""
+echo -e "${BOLD}--- Complete BigQuery Table & Row Audit (INFORMATION_SCHEMA) ---${NC}"
+for DS in cspr_cai cspr_policy cspr_rec cspr_finding cspr_ci; do
+    echo -e "${CYAN}[Dataset: ${DS}]${NC}"
+    bq query --nouse_legacy_sql --format=pretty --project_id="${BQ_PROJECT_ID}" \
+        "SELECT table_id, row_count, ROUND(size_bytes/1048576, 2) AS size_mb FROM \`${BQ_PROJECT_ID}.${DS}.__TABLES__\` ORDER BY row_count DESC LIMIT 15" 2>/dev/null || echo "  (No tables found in ${DS})"
+done
 
 echo ""
 echo -e "${BOLD}--- BigQuery Data Transfer (Recommendations Export) ---${NC}"
@@ -106,10 +119,16 @@ TRANSFER_INFO=$(bq ls --transfer_config --transfer_location="${TRANSFER_LOCATION
 if [[ -n "${TRANSFER_INFO}" ]]; then
     TRANSFER_ID=$(echo "${TRANSFER_INFO}" | awk '{print $1}')
     echo -e " • Recommendations_Export_Job: ${GREEN}[✔] Registered & Active (${TRANSFER_LOCATION})${NC}"
+    echo -e " • Config Resource Name:       ${TRANSFER_ID}"
     LATEST_RUN=$(bq ls --transfer_run --transfer_location="${TRANSFER_LOCATION}" "${TRANSFER_ID}" 2>/dev/null | grep "cspr_rec" | head -n 1 || true)
     if [[ -n "${LATEST_RUN}" ]]; then
         RUN_STATE=$(echo "${LATEST_RUN}" | awk '{print $(NF-1)}')
         echo -e " • Latest Transfer Run State:  ${CYAN}${RUN_STATE}${NC}"
+    fi
+    REC_COUNT=$(bq ls --project_id="${BQ_PROJECT_ID}" cspr_rec 2>/dev/null | grep -E "TABLE|VIEW" | wc -l | tr -d ' ' || true)
+    if [[ "${REC_COUNT:-0}" -eq 0 ]]; then
+        echo -e " • ${YELLOW}[Action] Triggering immediate on-demand run of Recommendations_Export_Job...${NC}"
+        bq mk --transfer_run --run_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${TRANSFER_ID}" || true
     fi
 else
     echo -e " • Recommendations_Export_Job: ${YELLOW}[!] Not found in ${TRANSFER_LOCATION}${NC}"
