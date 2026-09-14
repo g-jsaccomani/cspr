@@ -53,10 +53,12 @@ echo -e "${CYAN}[2/4] Deploying Findings Cloud Run Job (cspr-findings-job)...${N
 PROCESSED_FINDINGS_YAML="${BASE_DIR}/local_tests/cloudrun-findings-processed-${BQ_PROJECT_ID}.yaml"
 TEMPLATE_FINDINGS_FILE="${BASE_DIR}/templates/cloudrun-findings-job.template.yaml"
 ORGANIZATION_ID="${ORGANIZATION_ID:-802070535070}"
+ORG_DOMAIN="${ORG_DOMAIN:-nubank.com.br}"
 
 sed -e "s/\${BQ_PROJECT_ID}/${BQ_PROJECT_ID}/g" \
     -e "s/\${LOCATION}/${LOCATION}/g" \
     -e "s/\${ORGANIZATION_ID}/${ORGANIZATION_ID}/g" \
+    -e "s/\${ORG_DOMAIN}/${ORG_DOMAIN}/g" \
     "${TEMPLATE_FINDINGS_FILE}" > "${PROCESSED_FINDINGS_YAML}"
 
 gcloud run jobs replace "${PROCESSED_FINDINGS_YAML}" \
@@ -64,10 +66,23 @@ gcloud run jobs replace "${PROCESSED_FINDINGS_YAML}" \
     --region="${LOCATION}"
 echo -e "${GREEN}[✔] Findings job definition registered.${NC}"
 
+# 2.5 Check and trigger Recommendations Export Transfer Run if cspr_rec is empty
+REC_TABLES=$(bq ls --project_id="${BQ_PROJECT_ID}" cspr_rec 2>/dev/null | grep -E "TABLE|VIEW" | wc -l | tr -d ' ' || true)
+if [[ "${REC_TABLES:-0}" -eq 0 ]]; then
+    TRANSFER_CFG=$(bq ls --transfer_config --transfer_location="${LOCATION}" --project_id="${BQ_PROJECT_ID}" 2>/dev/null | grep "Recommendations_Export_Job" | awk '{print $1}' | head -n 1 || true)
+    if [[ -n "${TRANSFER_CFG}" ]]; then
+        echo -e "${YELLOW}[!] Dataset 'cspr_rec' is currently empty. Triggering immediate on-demand run of Recommendations_Export_Job...${NC}"
+        bq mk --transfer_run --run_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${TRANSFER_CFG}" >/dev/null 2>&1 || true
+    fi
+fi
+
 # 3. Trigger Findings Job
 echo -e "${CYAN}[3/4] Executing Findings Job in Cloud Run...${NC}"
 echo "Analyzing BigQuery datasets (cspr_cai, cspr_policy, cspr_rec) and generating findings..."
-gcloud run jobs execute cspr-findings-job     --region="${LOCATION}"     --project="${BQ_PROJECT_ID}"     --wait
+gcloud run jobs execute cspr-findings-job \
+    --region="${LOCATION}" \
+    --project="${BQ_PROJECT_ID}" \
+    --wait
 
 echo -e "${GREEN}[✔] Findings scan complete!${NC}"
 

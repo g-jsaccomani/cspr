@@ -18,18 +18,30 @@ spec:
               value: "${BQ_PROJECT_ID}"
             - name: BQ_PROJECT_ID
               value: "${BQ_PROJECT_ID}"
+            - name: BQ_BILLING_PROJECT
+              value: "${BQ_PROJECT_ID}"
             - name: LOCATION
               value: "${LOCATION}"
             - name: ORGANIZATION_ID
               value: "${ORGANIZATION_ID}"
+            - name: ORG_DOMAIN
+              value: "${ORG_DOMAIN}"
+            - name: INCLUDE_LIST
+              value: "organizations/${ORGANIZATION_ID}"
+            - name: EXCLUDE_LIST
+              value: ""
             - name: BQDATASET_INVENTORY
               value: "cspr_cai"
             - name: BQDATASET_POLICYANALYZER
+              value: "cspr_policy"
+            - name: BQDATASET_EFFECTIVEORGPOLICY
               value: "cspr_policy"
             - name: BQDATASET_REC
               value: "cspr_rec"
             - name: BQDATASET_FINDING
               value: "cspr_finding"
+            - name: BQDATASET_CLOUDIDENTITY
+              value: "cspr_ci"
             resources:
               limits:
                 cpu: "2000m"
