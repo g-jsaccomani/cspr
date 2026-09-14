@@ -20,6 +20,8 @@ spec:
               value: "${BQ_PROJECT_ID}"
             - name: LOCATION
               value: "${LOCATION}"
+            - name: ORGANIZATION_ID
+              value: "${ORGANIZATION_ID}"
             - name: BQDATASET_INVENTORY
               value: "cspr_cai"
             - name: BQDATASET_POLICYANALYZER

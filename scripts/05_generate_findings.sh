@@ -42,6 +42,7 @@ CUSTOMER_FINDINGS_IMAGE="${LOCATION}-docker.pkg.dev/${BQ_PROJECT_ID}/customer-cs
 
 # 1. Push Findings Image
 echo -e "${CYAN}[1/4] Pushing CSPR Findings container to customer Artifact Registry...${NC}"
+gcloud auth configure-docker "us-docker.pkg.dev,${LOCATION}-docker.pkg.dev" --quiet
 docker pull "${PSO_FINDINGS_IMAGE}"
 docker tag "${PSO_FINDINGS_IMAGE}" "${CUSTOMER_FINDINGS_IMAGE}"
 docker push "${CUSTOMER_FINDINGS_IMAGE}"
@@ -51,10 +52,16 @@ echo -e "${GREEN}[✔] Findings image deployed to customer registry.${NC}"
 echo -e "${CYAN}[2/4] Deploying Findings Cloud Run Job (cspr-findings-job)...${NC}"
 PROCESSED_FINDINGS_YAML="${BASE_DIR}/local_tests/cloudrun-findings-processed-${BQ_PROJECT_ID}.yaml"
 TEMPLATE_FINDINGS_FILE="${BASE_DIR}/templates/cloudrun-findings-job.template.yaml"
+ORGANIZATION_ID="${ORGANIZATION_ID:-802070535070}"
 
-sed -e "s/\${BQ_PROJECT_ID}/${BQ_PROJECT_ID}/g"     -e "s/\${LOCATION}/${LOCATION}/g"     "${TEMPLATE_FINDINGS_FILE}" > "${PROCESSED_FINDINGS_YAML}"
+sed -e "s/\${BQ_PROJECT_ID}/${BQ_PROJECT_ID}/g" \
+    -e "s/\${LOCATION}/${LOCATION}/g" \
+    -e "s/\${ORGANIZATION_ID}/${ORGANIZATION_ID}/g" \
+    "${TEMPLATE_FINDINGS_FILE}" > "${PROCESSED_FINDINGS_YAML}"
 
-gcloud run jobs replace "${PROCESSED_FINDINGS_YAML}"     --project="${BQ_PROJECT_ID}"     --region="${LOCATION}"
+gcloud run jobs replace "${PROCESSED_FINDINGS_YAML}" \
+    --project="${BQ_PROJECT_ID}" \
+    --region="${LOCATION}"
 echo -e "${GREEN}[✔] Findings job definition registered.${NC}"
 
 # 3. Trigger Findings Job
