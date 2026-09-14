@@ -58,8 +58,13 @@ check_dataset() {
     
     echo -n " • Checking dataset '${DATASET_NAME}' (${DESCRIPTION})... "
     if echo "${DATASETS}" | grep -q "\"${DATASET_NAME}\""; then
-        TABLES_COUNT=$(bq ls --project_id="${BQ_PROJECT_ID}" "${DATASET_NAME}" 2>/dev/null | grep -c -E "TABLE|VIEW" || true)
-        echo -e "${GREEN}[✔] Present (${TABLES_COUNT} tables/views)${NC}"
+        local SUMMARY
+        SUMMARY=$(bq query --nouse_legacy_sql --format=csv --quiet \
+            "SELECT COUNT(1), IFNULL(SUM(row_count),0), ROUND(IFNULL(SUM(size_bytes),0)/1073741824, 2) FROM \`${BQ_PROJECT_ID}.${DATASET_NAME}.__TABLES__\`" 2>/dev/null | tail -n 1 || true)
+        local T_COUNT=$(echo "${SUMMARY}" | cut -d',' -f1)
+        local R_COUNT=$(echo "${SUMMARY}" | cut -d',' -f2)
+        local GB_SIZE=$(echo "${SUMMARY}" | cut -d',' -f3)
+        echo -e "${GREEN}[✔] Present (${T_COUNT:-0} tables | ${R_COUNT:-0} total rows | ${GB_SIZE:-0} GB)${NC}"
     else
         if [[ "${IS_ASYNC}" == "true" ]]; then
             echo -e "${YELLOW}[⏳] Pending Ingestion (48h-72h window)${NC}"
@@ -70,7 +75,11 @@ check_dataset() {
 }
 
 echo ""
-echo -e "${BOLD}--- BigQuery Datasets Verification ---${NC}"
+echo -e "${BOLD}--- Cloud Run Collector Job Status ---${NC}"
+gcloud run jobs executions list --job=cspr-prereq-job --region="${LOCATION:-us-east1}" --project="${BQ_PROJECT_ID}" --limit=5 2>/dev/null || echo "  (Could not list Cloud Run Job executions)"
+
+echo ""
+echo -e "${BOLD}--- BigQuery Datasets Verification (Exact Counts) ---${NC}"
 check_dataset "cspr_cai" "Cloud Asset Inventory" "false"
 check_dataset "cspr_policy" "Organization Policies & Key Analyzer" "false"
 check_dataset "cspr_rec" "Security & IAM Recommenders" "true"
