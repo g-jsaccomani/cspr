@@ -370,6 +370,15 @@ for role in "${PROJECT_SA_ROLES[@]}"; do
     fi
 done
 
+PROJECT_NUMBER=$(gcloud projects describe "${BQ_PROJECT_ID}" --format="value(projectNumber)" 2>/dev/null || true)
+if [[ -n "${PROJECT_NUMBER}" ]]; then
+    echo " - Granting BigQuery Data Transfer Service Agent permission to impersonate ${SA_EMAIL}..."
+    gcloud iam service-accounts add-iam-policy-binding "${SA_EMAIL}" \
+      --member="serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com" \
+      --role="roles/iam.serviceAccountTokenCreator" \
+      --project="${BQ_PROJECT_ID}" --quiet 2>/dev/null || true
+fi
+
 echo "Assigning Organization-level read permissions (${ORGANIZATION_ID})..."
 ORG_ROLES=(
   "roles/cloudasset.viewer"

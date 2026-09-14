@@ -96,8 +96,8 @@ check_table_rows() {
 
 check_table_rows "cspr_cai" "iam_policy"
 check_table_rows "cspr_cai" "org_policy"
-check_table_rows "cspr_cai" "resource"
-check_table_rows "cspr_cai" "access_context_manager_policy"
+check_table_rows "cspr_cai" "resource_cloudresourcemanager_googleapis_com_Project"
+check_table_rows "cspr_cai" "kubernetes"
 check_table_rows "cspr_cai" "os_inventory"
 check_table_rows "cspr_policy" "policyanalyzer_orgpolicy_analysis"
 check_table_rows "cspr_policy" "policyanalyzer_UnusedServiceAccountKey"
@@ -127,6 +127,20 @@ if [[ -n "${TRANSFER_INFO}" ]]; then
     fi
     REC_COUNT=$(bq ls --project_id="${BQ_PROJECT_ID}" cspr_rec 2>/dev/null | grep -E "TABLE|VIEW" | wc -l | tr -d ' ' || true)
     if [[ "${REC_COUNT:-0}" -eq 0 ]]; then
+        echo -e " • ${YELLOW}[Action] Ensuring BigQuery Data Transfer Service Agent IAM permissions...${NC}"
+        PROJECT_NUMBER=$(gcloud projects describe "${BQ_PROJECT_ID}" --format="value(projectNumber)" 2>/dev/null || true)
+        ACTIVE_USER=$(gcloud config get-value account 2>/dev/null || true)
+        if [[ -n "${PROJECT_NUMBER}" ]]; then
+            gcloud iam service-accounts add-iam-policy-binding "cspr-prereq-cloudrun-sa@${BQ_PROJECT_ID}.iam.gserviceaccount.com" \
+              --member="serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-bigquerydatatransfer.iam.gserviceaccount.com" \
+              --role="roles/iam.serviceAccountTokenCreator" \
+              --project="${BQ_PROJECT_ID}" --quiet >/dev/null 2>&1 || true
+        fi
+        if [[ -n "${ACTIVE_USER}" ]]; then
+            gcloud projects add-iam-policy-binding "${BQ_PROJECT_ID}" \
+              --member="user:${ACTIVE_USER}" \
+              --role="roles/bigquery.admin" --quiet >/dev/null 2>&1 || true
+        fi
         echo -e " • ${YELLOW}[Action] Triggering immediate on-demand run of Recommendations_Export_Job...${NC}"
         bq mk --transfer_run --run_time="$(date -u +%Y-%m-%dT%H:%M:%SZ)" "${TRANSFER_ID}" || true
     fi
