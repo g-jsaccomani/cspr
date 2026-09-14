@@ -17,8 +17,8 @@ NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Find summary file
-SUMMARY_FILE=$(ls -t "${SCRIPT_DIR}"/cspr_environment_summary_*.txt "${SCRIPT_DIR}"/local_tests/cspr_environment_summary_*.txt 2>/dev/null | head -n 1 || true)
+# Find summary file (excluding sample/template files)
+SUMMARY_FILE=$(ls -t "${SCRIPT_DIR}"/cspr_environment_summary_*.txt "${SCRIPT_DIR}"/local_tests/cspr_environment_summary_*.txt 2>/dev/null | grep -v "_sample.txt" | head -n 1 || true)
 DEFAULT_PROJECT=""
 DEFAULT_ORG=""
 DEFAULT_LOCATION="us-east1"
@@ -33,6 +33,8 @@ ACTIVE_GCLOUD_PROJ=$(gcloud config get-value project 2>/dev/null || true)
 if [[ -n "${ACTIVE_GCLOUD_PROJ}" && "${ACTIVE_GCLOUD_PROJ}" != "(unset)" ]]; then
     DEFAULT_PROJECT="${DEFAULT_PROJECT:-${ACTIVE_GCLOUD_PROJ}}"
 fi
+DEFAULT_PROJECT="${DEFAULT_PROJECT:-nu-cspr-assessment}"
+DEFAULT_ORG="${DEFAULT_ORG:-802070535070}"
 
 export BQ_PROJECT_ID="${BQ_PROJECT_ID:-${DEFAULT_PROJECT}}"
 export ORGANIZATION_ID="${ORGANIZATION_ID:-${DEFAULT_ORG}}"
