@@ -100,6 +100,22 @@ check_table_rows "cspr_policy" "policyanalyzer_orgpolicy_analysis"
 check_table_rows "cspr_policy" "policyanalyzer_UnusedServiceAccountKey"
 
 echo ""
+echo -e "${BOLD}--- BigQuery Data Transfer (Recommendations Export) ---${NC}"
+TRANSFER_LOCATION="${LOCATION:-us-east1}"
+TRANSFER_INFO=$(bq ls --transfer_config --transfer_location="${TRANSFER_LOCATION}" --project_id="${BQ_PROJECT_ID}" 2>/dev/null | grep "Recommendations_Export_Job" || true)
+if [[ -n "${TRANSFER_INFO}" ]]; then
+    TRANSFER_ID=$(echo "${TRANSFER_INFO}" | awk '{print $1}')
+    echo -e " • Recommendations_Export_Job: ${GREEN}[✔] Registered & Active (${TRANSFER_LOCATION})${NC}"
+    LATEST_RUN=$(bq ls --transfer_run --transfer_location="${TRANSFER_LOCATION}" "${TRANSFER_ID}" 2>/dev/null | grep "cspr_rec" | head -n 1 || true)
+    if [[ -n "${LATEST_RUN}" ]]; then
+        RUN_STATE=$(echo "${LATEST_RUN}" | awk '{print $(NF-1)}')
+        echo -e " • Latest Transfer Run State:  ${CYAN}${RUN_STATE}${NC}"
+    fi
+else
+    echo -e " • Recommendations_Export_Job: ${YELLOW}[!] Not found in ${TRANSFER_LOCATION}${NC}"
+fi
+
+echo ""
 echo -e "${CYAN}${BOLD}==============================================================================${NC}"
 echo -e "${YELLOW}${BOLD} ⚠️  CRITICAL TELEMETRY INGESTION WINDOW (48 - 72h):${NC}"
 echo -e " Cloud Asset Inventory (cspr_cai) and Org Policies (cspr_policy) populate immediately."
