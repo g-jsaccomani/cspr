@@ -75,8 +75,8 @@ check_dataset() {
 }
 
 echo ""
-echo -e "${BOLD}--- Cloud Run Collector Job Status ---${NC}"
-gcloud run jobs executions list --job=cspr-prereq-job --region="${LOCATION:-us-east1}" --project="${BQ_PROJECT_ID}" --limit=5 2>/dev/null || echo "  (Could not list Cloud Run Job executions)"
+echo -e "${BOLD}--- Cloud Run Collector & Findings Jobs Status ---${NC}"
+gcloud run jobs executions list --region="${LOCATION:-us-east1}" --project="${BQ_PROJECT_ID}" --limit=6 2>/dev/null || echo "  (Could not list Cloud Run Job executions)"
 
 echo ""
 echo -e "${BOLD}--- BigQuery Datasets Verification (Exact Counts) ---${NC}"
@@ -112,6 +112,7 @@ check_table_rows "cspr_policy" "policyanalyzer_orgpolicy_analysis"
 check_table_rows "cspr_policy" "policyanalyzer_UnusedServiceAccountKey"
 check_table_rows "cspr_rec" "recommendations_export"
 check_table_rows "cspr_rec" "insights_export"
+check_table_rows "cspr_finding" "cspr_finding"
 
 echo ""
 echo -e "${BOLD}--- Complete BigQuery Table & Row Audit (INFORMATION_SCHEMA) ---${NC}"

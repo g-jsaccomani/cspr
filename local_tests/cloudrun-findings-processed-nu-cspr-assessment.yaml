@@ -3,29 +3,29 @@ kind: Job
 metadata:
   name: cspr-findings-job
   labels:
-    cloud.googleapis.com/location: ${LOCATION}
+    cloud.googleapis.com/location: us-east1
 spec:
   template:
     spec:
       taskCount: 1
       template:
         spec:
-          serviceAccountName: cspr-prereq-cloudrun-sa@${BQ_PROJECT_ID}.iam.gserviceaccount.com
+          serviceAccountName: cspr-prereq-cloudrun-sa@nu-cspr-assessment.iam.gserviceaccount.com
           containers:
-          - image: ${LOCATION}-docker.pkg.dev/${BQ_PROJECT_ID}/customer-cspr-toolkit/cspr-toolkit-findings:latest
+          - image: us-east1-docker.pkg.dev/nu-cspr-assessment/customer-cspr-toolkit/cspr-toolkit-findings:latest
             env:
             - name: BQ_PROJECT
-              value: "${BQ_PROJECT_ID}"
+              value: "nu-cspr-assessment"
             - name: BQ_PROJECT_ID
-              value: "${BQ_PROJECT_ID}"
+              value: "nu-cspr-assessment"
             - name: BQ_BILLING_PROJECT
-              value: "${BQ_PROJECT_ID}"
+              value: "nu-cspr-assessment"
             - name: LOCATION
-              value: "${LOCATION}"
+              value: "us-east1"
             - name: ORGANIZATION_ID
-              value: "${ORGANIZATION_ID}"
+              value: "802070535070"
             - name: ORG_DOMAIN
-              value: "${ORG_DOMAIN}"
+              value: "nubank.com.br"
             - name: INCLUDE_LIST
               value: ""
             - name: EXCLUDE_LIST

@@ -68,3 +68,8 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Customer Deliverables & Raw Findings Exports (Keep Local / Google Drive Only)
+deliverables/
+local_tests/Findings_raw_*/
+local_tests/cspr_findings_*
