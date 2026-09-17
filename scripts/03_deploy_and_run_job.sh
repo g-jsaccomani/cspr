@@ -88,22 +88,20 @@ echo -e "${CYAN}[2/3] Deploying Cloud Run Job definition (cspr-prereq-job)...${N
 gcloud run jobs replace "${PROCESSED_YAML}"     --project="${BQ_PROJECT_ID}"     --region="${LOCATION}"
 echo -e "${GREEN}[✔] Job registered successfully.${NC}"
 
-# 4. Trigger Execution
-echo -e "${CYAN}[3/3] Triggering Cloud Run Job execution (telemetry export)...${NC}"
-echo "Executing: gcloud run jobs execute cspr-prereq-job --region=${LOCATION} --project=${BQ_PROJECT_ID} --wait"
-echo "(This initiates the collection of Cloud Asset Inventory, Org Policies, and Recommenders)..."
+# 4. Trigger Execution (Always Async)
+echo -e "${CYAN}[3/3] Triggering Cloud Run Job execution in background (--async)...${NC}"
+echo "Executing: gcloud run jobs execute cspr-prereq-job --region=${LOCATION} --project=${BQ_PROJECT_ID} --async"
+echo "(This initiates the collection of Cloud Asset Inventory, Org Policies, and Recommenders in background)..."
 echo ""
 
-EXECUTION_LOG=$(mktemp)
-if gcloud run jobs execute cspr-prereq-job     --region="${LOCATION}"     --project="${BQ_PROJECT_ID}"     --wait 2>&1 | tee "${EXECUTION_LOG}"; then
+if gcloud run jobs execute cspr-prereq-job --region="${LOCATION}" --project="${BQ_PROJECT_ID}" --async; then
     echo ""
-    echo -e "${GREEN}${BOLD}[✔] SUCCESS: Cloud Run Job completed successfully!${NC}"
-    echo -e "Data has been exported into BigQuery datasets (cspr_cai, cspr_policy, cspr_rec)."
+    echo -e "${GREEN}${BOLD}[✔] SUCCESS: Cloud Run Job 'cspr-prereq-job' disparado em background (--async)!${NC}"
+    echo -e "Use a ${CYAN}Opção 9${NC} no menu principal para monitorar o progresso em tempo real."
 else
     echo ""
-    echo -e "${YELLOW}[!] Note: Job execution reported warnings or running asynchronously.${NC}"
+    echo -e "${YELLOW}[!] Note: Job execution reported warnings.${NC}"
     echo -e "Inspect Cloud Logging logs:"
     echo -e "https://console.cloud.google.com/run/jobs/details/${LOCATION}/cspr-prereq-job/logs?project=${BQ_PROJECT_ID}"
 fi
-rm -f "${EXECUTION_LOG}"
 echo ""

@@ -46,7 +46,7 @@ spec:
               value: "FALSE"
             resources:
               limits:
-                cpu: "2000m"
-                memory: "4Gi"
-          timeoutSeconds: 3600
+                cpu: "4000m"
+                memory: "8Gi"
+          timeoutSeconds: 14400
           maxRetries: 1
