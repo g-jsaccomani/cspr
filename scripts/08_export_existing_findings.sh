@@ -110,7 +110,8 @@ EXPORT_ZIP="${BASE_DIR}/local_tests/cspr_findings_bundle_${BQ_PROJECT_ID}.zip"
 # 3. Consolidate into Deliverables
 if [[ -f "${BASE_DIR}/scripts/06_build_nubank_drive_workspace.py" ]]; then
     echo -e "${CYAN}[3/3] Gerando entregáveis consolidados (.xlsx, .docx, decks)...${NC}"
-    python3 "${BASE_DIR}/scripts/06_build_nubank_drive_workspace.py" || echo -e "${YELLOW}[i] Build Office local opcional ignorado (baixe o ZIP para rodar no Mac se desejar).${NC}"
+    python3 -c "import docx, openpyxl" 2>/dev/null || pip3 install --user -q python-docx openpyxl 2>/dev/null || true
+    python3 "${BASE_DIR}/scripts/06_build_nubank_drive_workspace.py" 2>/dev/null || echo -e "${YELLOW}[i] Build Office local opcional ignorado (baixe o ZIP para rodar no Mac se desejar).${NC}"
 fi
 
 echo ""
