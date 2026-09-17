@@ -59,7 +59,7 @@ check_dataset() {
     echo -n " • Checking dataset '${DATASET_NAME}' (${DESCRIPTION})... "
     if echo "${DATASETS}" | grep -q "\"${DATASET_NAME}\""; then
         local SUMMARY
-        SUMMARY=$(bq query --nouse_legacy_sql --format=csv --quiet \
+        SUMMARY=$(bq query --nouse_legacy_sql --project_id="${BQ_PROJECT_ID}" --format=csv --quiet \
             "SELECT COUNT(1), IFNULL(SUM(row_count),0), ROUND(IFNULL(SUM(size_bytes),0)/1073741824, 2) FROM \`${BQ_PROJECT_ID}.${DATASET_NAME}.__TABLES__\`" 2>/dev/null | tail -n 1 || true)
         local T_COUNT=$(echo "${SUMMARY}" | cut -d',' -f1)
         local R_COUNT=$(echo "${SUMMARY}" | cut -d',' -f2)
@@ -95,7 +95,7 @@ check_table_rows() {
     local QUERY="SELECT count(1) FROM \`${BQ_PROJECT_ID}.${DATASET}.${TABLE}\`"
     
     local COUNT
-    COUNT=$(bq query --nouse_legacy_sql --format=csv --quiet "${QUERY}" 2>/dev/null | tail -n 1 || true)
+    COUNT=$(bq query --nouse_legacy_sql --project_id="${BQ_PROJECT_ID}" --format=csv --quiet "${QUERY}" 2>/dev/null | tail -n 1 || true)
     if [[ -n "${COUNT}" && "${COUNT}" =~ ^[0-9]+$ ]]; then
         echo -e " • ${DATASET}.${TABLE}: ${GREEN}${COUNT} rows${NC}"
     else
