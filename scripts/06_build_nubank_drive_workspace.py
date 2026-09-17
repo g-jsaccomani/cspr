@@ -19,14 +19,18 @@ from pptx.dml.color import RGBColor as PptRGBColor
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
-BASE_DIR = "/Users/jsaccomani/Documents/Jetsky/Google/CSPR"
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FINDINGS_JSON_PATH = os.path.join(BASE_DIR, "local_tests/cspr_findings_nu-cspr-assessment.json")
 FINDINGS_RAW_SRC = os.path.join(BASE_DIR, "local_tests/Findings_raw_Nubank")
 
-TARGETS = [
+_ALL_TARGETS = [
     os.path.join(BASE_DIR, "deliverables/Nubank_CSPR_Drive/01 - [Internal]"),
     "/Users/jsaccomani/Library/CloudStorage/GoogleDrive-jsaccomani@google.com/Shared drives/Nu Pagamentos S A - INSTITUICAO DE PAGAMENTO GenAI CON X 600 [CR]/[EXT] Nubank/CSPR/01 - [Internal]",
     "/Users/jsaccomani/Library/CloudStorage/GoogleDrive-jsaccomani@google.com/My Drive/Nubank/CSPR/01 - [Internal]",
+]
+TARGETS = [
+    t for idx, t in enumerate(_ALL_TARGETS)
+    if idx == 0 or os.path.exists(os.path.dirname(os.path.dirname(t)))
 ]
 
 NUBANK_META = {
